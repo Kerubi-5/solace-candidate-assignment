@@ -11,5 +11,5 @@ export interface Advocate {
   specialties: string[];
   yearsOfExperience: number;
   phoneNumber: number;
-  createdAt?: Date | string;
+  createdAt?: Date | string | null;
 }
