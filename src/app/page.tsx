@@ -132,8 +132,8 @@ export default function Home() {
                 </td>
                 <td className="border border-gray-400 px-4 py-2">
                   <div className="flex flex-col gap-1">
-                    {advocate.specialties.map((specialty, index) => (
-                      <span key={index} className="text-sm">
+                    {advocate.specialties.map((specialty) => (
+                      <span key={specialty} className="text-sm">
                         {specialty}
                       </span>
                     ))}
