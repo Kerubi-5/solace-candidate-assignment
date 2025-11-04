@@ -4,7 +4,7 @@
  */
 
 import { db } from '@/db';
-import { advocates } from '@/db/schema';
+import { advocates } from '../models/model';
 import { eq, and, ilike, gte, sql } from 'drizzle-orm';
 import type { AdvocateModel } from '../models/model';
 import { toAdvocateModel } from '../models/model';

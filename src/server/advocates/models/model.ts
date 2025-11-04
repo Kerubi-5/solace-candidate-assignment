@@ -1,46 +1,65 @@
 /**
- * Domain models for Advocate entities.
- * These models represent the business logic layer and are separate from database schemas.
+ * Database schema and domain models for Advocate entities.
+ * Schema defines the database structure, model represents the business logic layer.
  */
 
-/**
- * Advocate domain model representing the business entity
- */
-export interface AdvocateModel {
-  id?: number;
-  firstName: string;
-  lastName: string;
-  city: string;
-  degree: string;
-  specialties: string[];
-  yearsOfExperience: number;
-  phoneNumber: number;
-  createdAt?: Date;
-}
+import { sql } from 'drizzle-orm';
+import {
+  pgTable,
+  integer,
+  text,
+  jsonb,
+  serial,
+  timestamp,
+  bigint,
+} from 'drizzle-orm/pg-core';
+import type { InferSelectModel } from 'drizzle-orm';
 
 /**
- * Convert database schema to domain model
+ * Advocates database table schema.
  */
-export function toAdvocateModel(data: {
-  id?: number;
-  firstName: string;
-  lastName: string;
-  city: string;
-  degree: string;
-  specialties: string[] | unknown;
-  yearsOfExperience: number;
-  phoneNumber: number;
-  createdAt?: Date | string | null;
-}): AdvocateModel {
+export const advocates = pgTable('advocates', {
+  id: serial('id').primaryKey(),
+  firstName: text('first_name').notNull(),
+  lastName: text('last_name').notNull(),
+  city: text('city').notNull(),
+  degree: text('degree').notNull(),
+  specialties: jsonb('payload').default([]).notNull(),
+  yearsOfExperience: integer('years_of_experience').notNull(),
+  phoneNumber: bigint('phone_number', { mode: 'number' }).notNull(),
+  createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+/**
+ * Advocate domain model inferred from database schema.
+ */
+export type AdvocateModel = InferSelectModel<typeof advocates>;
+
+/**
+ * Convert database schema result to domain model.
+ * Handles type conversion and ensures data consistency.
+ */
+export function toAdvocateModel(
+  data: AdvocateModel & {
+    createdAt?: Date | string | null;
+    specialties?: string[] | unknown;
+  }
+): AdvocateModel {
   return {
     id: data.id,
     firstName: data.firstName,
     lastName: data.lastName,
     city: data.city,
     degree: data.degree,
-    specialties: Array.isArray(data.specialties) ? data.specialties : [],
+    specialties: Array.isArray(data.specialties)
+      ? data.specialties
+      : (data.specialties as string[]) || [],
     yearsOfExperience: data.yearsOfExperience,
     phoneNumber: data.phoneNumber,
-    createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
+    createdAt: data.createdAt
+      ? data.createdAt instanceof Date
+        ? data.createdAt
+        : new Date(data.createdAt)
+      : (data.createdAt ?? null),
   };
 }
