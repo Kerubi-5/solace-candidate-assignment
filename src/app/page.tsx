@@ -83,70 +83,78 @@ export default function Home() {
           </button>
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse border border-gray-400">
-          <thead>
-            <tr>
-              <th className="border border-gray-400 px-4 py-2 text-left">
-                First Name
-              </th>
-              <th className="border border-gray-400 px-4 py-2 text-left">
-                Last Name
-              </th>
-              <th className="border border-gray-400 px-4 py-2 text-left">
-                City
-              </th>
-              <th className="border border-gray-400 px-4 py-2 text-left">
-                Degree
-              </th>
-              <th className="border border-gray-400 px-4 py-2 text-left">
-                Specialties
-              </th>
-              <th className="border border-gray-400 px-4 py-2 text-left">
-                Years of Experience
-              </th>
-              <th className="border border-gray-400 px-4 py-2 text-left">
-                Phone Number
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredAdvocates.map((advocate) => (
-              <tr
-                key={`${advocate.firstName}-${advocate.lastName}-${advocate.phoneNumber}`}
-              >
-                <td className="border border-gray-400 px-4 py-2">
-                  {advocate.firstName}
-                </td>
-                <td className="border border-gray-400 px-4 py-2">
-                  {advocate.lastName}
-                </td>
-                <td className="border border-gray-400 px-4 py-2">
-                  {advocate.city}
-                </td>
-                <td className="border border-gray-400 px-4 py-2">
-                  {advocate.degree}
-                </td>
-                <td className="border border-gray-400 px-4 py-2">
-                  <div className="flex flex-col gap-1">
-                    {advocate.specialties.map((specialty, index) => (
-                      <span key={index} className="text-sm">
-                        {specialty}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td className="border border-gray-400 px-4 py-2">
-                  {advocate.yearsOfExperience}
-                </td>
-                <td className="border border-gray-400 px-4 py-2">
-                  {advocate.phoneNumber}
-                </td>
+      {filteredAdvocates.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-600">
+            {searchTerm
+              ? 'No advocates found matching your search.'
+              : 'No advocates available.'}
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-collapse border border-gray-400">
+            <thead>
+              <tr>
+                <th className="border border-gray-400 px-4 py-2 text-left">
+                  First Name
+                </th>
+                <th className="border border-gray-400 px-4 py-2 text-left">
+                  Last Name
+                </th>
+                <th className="border border-gray-400 px-4 py-2 text-left">
+                  City
+                </th>
+                <th className="border border-gray-400 px-4 py-2 text-left">
+                  Degree
+                </th>
+                <th className="border border-gray-400 px-4 py-2 text-left">
+                  Specialties
+                </th>
+                <th className="border border-gray-400 px-4 py-2 text-left">
+                  Years of Experience
+                </th>
+                <th className="border border-gray-400 px-4 py-2 text-left">
+                  Phone Number
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filteredAdvocates.map((advocate) => (
+                <tr key={advocate.id}>
+                  <td className="border border-gray-400 px-4 py-2">
+                    {advocate.firstName}
+                  </td>
+                  <td className="border border-gray-400 px-4 py-2">
+                    {advocate.lastName}
+                  </td>
+                  <td className="border border-gray-400 px-4 py-2">
+                    {advocate.city}
+                  </td>
+                  <td className="border border-gray-400 px-4 py-2">
+                    {advocate.degree}
+                  </td>
+                  <td className="border border-gray-400 px-4 py-2">
+                    <div className="flex flex-col gap-1">
+                      {advocate.specialties.map((specialty) => (
+                        <span key={specialty} className="text-sm">
+                          {specialty}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="border border-gray-400 px-4 py-2">
+                    {advocate.yearsOfExperience}
+                  </td>
+                  <td className="border border-gray-400 px-4 py-2">
+                    {advocate.phoneNumber}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </main>
   );
 }
