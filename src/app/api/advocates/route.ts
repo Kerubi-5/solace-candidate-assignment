@@ -4,12 +4,12 @@
  * Uses Zod schemas for response validation.
  */
 
-import { z } from 'zod';
 import { advocateRepository } from '@/server/advocates/repositories/repository';
 import {
   getAdvocatesResponseSchema,
   advocateResponseSchema,
 } from '@/server/advocates/dto/dto';
+import { handleApiError } from '@/server/lib/error-handler';
 import type { AdvocateModel } from '@/server/advocates/models/model';
 
 /**
@@ -50,22 +50,6 @@ export async function GET(): Promise<Response> {
 
     return Response.json(validatedResponse, { status: 200 });
   } catch (error) {
-    console.error('Error fetching advocates:', error);
-
-    // Handle Zod validation errors
-    if (error instanceof z.ZodError) {
-      return Response.json(
-        {
-          error: 'Validation error',
-          details: error.errors.map((e) => `${e.path.join('.')}: ${e.message}`),
-        },
-        { status: 500 }
-      );
-    }
-
-    return Response.json(
-      { error: 'Failed to fetch advocates' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
