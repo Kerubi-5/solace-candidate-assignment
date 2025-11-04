@@ -16,8 +16,26 @@ import type { FilterAdvocatesDto } from '../dto/dto';
 export class AdvocateRepository {
   /**
    * Get all advocates from the database.
+   * Optionally accepts filters for server-side filtering.
+   *
+   * @param filters - Optional filter criteria for filtering advocates
+   * @returns Array of advocate models
    */
-  async findAll(): Promise<AdvocateModel[]> {
+  async findAll(filters?: FilterAdvocatesDto): Promise<AdvocateModel[]> {
+    // Check if any filter fields are actually provided
+    const hasFilters =
+      filters &&
+      (filters.city !== undefined ||
+        filters.degree !== undefined ||
+        filters.specialty !== undefined ||
+        filters.minYearsOfExperience !== undefined);
+
+    // If filters are provided, use filtering logic
+    if (hasFilters) {
+      return this.findByFilter(filters);
+    }
+
+    // Otherwise, return all advocates
     const results = await db.select().from(advocates);
     return results.map(toAdvocateModel);
   }
@@ -37,8 +55,11 @@ export class AdvocateRepository {
   /**
    * Filter advocates by criteria using database queries.
    * Performs filtering at the database level for better performance.
+   * Internal method used by findAll when filters are provided.
    */
-  async findByFilter(filter: FilterAdvocatesDto): Promise<AdvocateModel[]> {
+  private async findByFilter(
+    filter: FilterAdvocatesDto
+  ): Promise<AdvocateModel[]> {
     // Build WHERE conditions dynamically based on filter
     const conditions = [];
 

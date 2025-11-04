@@ -6,6 +6,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { advocatesApi } from '@/data-access/advocates.api';
 import type { Advocate } from '@/types/advocate';
+import type { FilterAdvocatesDto } from '@/server/advocates/dto/dto';
 
 /**
  * Query keys for advocates queries.
@@ -14,7 +15,7 @@ import type { Advocate } from '@/types/advocate';
 export const advocatesQueryKeys = {
   all: ['advocates'] as const,
   lists: () => [...advocatesQueryKeys.all, 'list'] as const,
-  list: (filters?: Record<string, unknown>) =>
+  list: (filters?: FilterAdvocatesDto) =>
     [...advocatesQueryKeys.lists(), filters] as const,
   details: () => [...advocatesQueryKeys.all, 'detail'] as const,
   detail: (id: number) => [...advocatesQueryKeys.details(), id] as const,
@@ -24,12 +25,13 @@ export const advocatesQueryKeys = {
  * Hook to fetch all advocates.
  * Uses React Query for automatic caching, loading states, and error handling.
  *
+ * @param filters - Optional filter parameters for server-side filtering
  * @returns Object containing advocates data, loading state, error state, and query methods
  */
-export function useAdvocates() {
+export function useAdvocates(filters?: FilterAdvocatesDto) {
   return useQuery<Advocate[], Error>({
-    queryKey: advocatesQueryKeys.lists(),
-    queryFn: () => advocatesApi.getAll(),
+    queryKey: advocatesQueryKeys.list(filters),
+    queryFn: () => advocatesApi.getAll(filters),
     staleTime: 60 * 1000, // 1 minute
     gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
   });
