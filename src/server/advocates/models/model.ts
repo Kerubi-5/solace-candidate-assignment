@@ -30,7 +30,7 @@ export function toAdvocateModel(data: {
   specialties: string[] | unknown;
   yearsOfExperience: number;
   phoneNumber: number;
-  createdAt?: Date | string;
+  createdAt?: Date | string | null;
 }): AdvocateModel {
   return {
     id: data.id,
