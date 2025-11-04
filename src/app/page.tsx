@@ -1,65 +1,22 @@
 'use client';
 
-import { useState, useEffect, useMemo, ChangeEvent } from 'react';
-import { useAdvocates } from '@/hooks/useAdvocates';
-import type { FilterAdvocatesDto } from '@/server/advocates/dto/dto';
+import { useAdvocateSearch } from '@/hooks/useAdvocateSearch';
+import { AdvocateRow } from '@/components/AdvocateRow';
+import { PaginationControls } from '@/components/PaginationControls';
 
 export default function Home() {
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
-
-  // Debounce search term to avoid excessive API calls
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300); // 300ms debounce delay
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Build filter object from search term
-  // For now, we'll use search term as city filter (can be enhanced later)
-  const filters: FilterAdvocatesDto | undefined = useMemo(() => {
-    if (!debouncedSearchTerm.trim()) {
-      return undefined;
-    }
-
-    return {
-      city: debouncedSearchTerm.trim(),
-    };
-  }, [debouncedSearchTerm]);
-
-  const { data: advocates = [], isLoading, error } = useAdvocates(filters);
-
-  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleReset = () => {
-    setSearchTerm('');
-  };
-
-  if (isLoading) {
-    return (
-      <main className="m-6">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-lg">Loading advocates...</div>
-        </div>
-      </main>
-    );
-  }
-
-  if (error) {
-    return (
-      <main className="m-6">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-lg text-red-600">
-            Error loading advocates: {error.message}
-          </div>
-        </div>
-      </main>
-    );
-  }
+  const {
+    searchTerm,
+    searchQuery,
+    hasActiveSearch,
+    advocates,
+    pagination,
+    isLoading,
+    error,
+    handleSearchChange,
+    handleReset,
+    handlePageChange,
+  } = useAdvocateSearch();
 
   return (
     <main className="m-6">
@@ -68,7 +25,7 @@ export default function Home() {
         <p className="mb-2">Search</p>
         <p className="mb-2">
           Searching for:{' '}
-          <span className="font-semibold">{searchTerm || '(none)'}</span>
+          <span className="font-semibold">{searchQuery || '(none)'}</span>
         </p>
         <div className="flex gap-2 mb-4">
           <input
@@ -86,10 +43,20 @@ export default function Home() {
           </button>
         </div>
       </div>
-      {advocates.length === 0 ? (
+      {error ? (
+        <div className="text-center py-8">
+          <p className="text-lg text-red-600">
+            Error loading advocates: {error.message}
+          </p>
+        </div>
+      ) : isLoading ? (
+        <div className="text-center py-8">
+          <p className="text-lg">Loading advocates...</p>
+        </div>
+      ) : advocates.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-600">
-            {debouncedSearchTerm
+            {hasActiveSearch
               ? 'No advocates found matching your search.'
               : 'No advocates available.'}
           </p>
@@ -124,38 +91,16 @@ export default function Home() {
             </thead>
             <tbody>
               {advocates.map((advocate) => (
-                <tr key={advocate.id}>
-                  <td className="border border-gray-400 px-4 py-2">
-                    {advocate.firstName}
-                  </td>
-                  <td className="border border-gray-400 px-4 py-2">
-                    {advocate.lastName}
-                  </td>
-                  <td className="border border-gray-400 px-4 py-2">
-                    {advocate.city}
-                  </td>
-                  <td className="border border-gray-400 px-4 py-2">
-                    {advocate.degree}
-                  </td>
-                  <td className="border border-gray-400 px-4 py-2">
-                    <div className="flex flex-col gap-1">
-                      {advocate.specialties.map((specialty) => (
-                        <span key={specialty} className="text-sm">
-                          {specialty}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="border border-gray-400 px-4 py-2">
-                    {advocate.yearsOfExperience}
-                  </td>
-                  <td className="border border-gray-400 px-4 py-2">
-                    {advocate.phoneNumber}
-                  </td>
-                </tr>
+                <AdvocateRow key={advocate.id} advocate={advocate} />
               ))}
             </tbody>
           </table>
+          {pagination.totalPages > 1 && (
+            <PaginationControls
+              pagination={pagination}
+              onPageChange={handlePageChange}
+            />
+          )}
         </div>
       )}
     </main>
