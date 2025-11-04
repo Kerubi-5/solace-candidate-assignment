@@ -1,8 +1,11 @@
 'use client';
 
 import { useAdvocateSearch } from '@/hooks/useAdvocateSearch';
-import { AdvocateRow } from '@/components/AdvocateRow';
-import { PaginationControls } from '@/components/PaginationControls';
+import { SearchInput } from '@/components/search/SearchInput';
+import { AdvocatesTable } from '@/components/advocates/AdvocatesTable';
+import { AdvocatesTableSkeleton } from '@/components/advocates/AdvocatesTableSkeleton';
+import { AdvocatesTableError } from '@/components/advocates/AdvocatesTableError';
+import { AdvocatesTableEmpty } from '@/components/advocates/AdvocatesTableEmpty';
 
 export default function Home() {
   const {
@@ -27,81 +30,24 @@ export default function Home() {
           Searching for:{' '}
           <span className="font-semibold">{searchQuery || '(none)'}</span>
         </p>
-        <div className="flex gap-2 mb-4">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="border border-black px-3 py-2 rounded"
-            placeholder="Search advocates..."
-          />
-          <button
-            onClick={handleReset}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded border border-gray-400"
-          >
-            Reset Search
-          </button>
-        </div>
+        <SearchInput
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
+          onReset={handleReset}
+        />
       </div>
       {error ? (
-        <div className="text-center py-8">
-          <p className="text-lg text-red-600">
-            Error loading advocates: {error.message}
-          </p>
-        </div>
+        <AdvocatesTableError error={error} />
       ) : isLoading ? (
-        <div className="text-center py-8">
-          <p className="text-lg">Loading advocates...</p>
-        </div>
+        <AdvocatesTableSkeleton />
       ) : advocates.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-600">
-            {hasActiveSearch
-              ? 'No advocates found matching your search.'
-              : 'No advocates available.'}
-          </p>
-        </div>
+        <AdvocatesTableEmpty hasActiveSearch={hasActiveSearch} />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse border border-gray-400">
-            <thead>
-              <tr>
-                <th className="border border-gray-400 px-4 py-2 text-left">
-                  First Name
-                </th>
-                <th className="border border-gray-400 px-4 py-2 text-left">
-                  Last Name
-                </th>
-                <th className="border border-gray-400 px-4 py-2 text-left">
-                  City
-                </th>
-                <th className="border border-gray-400 px-4 py-2 text-left">
-                  Degree
-                </th>
-                <th className="border border-gray-400 px-4 py-2 text-left">
-                  Specialties
-                </th>
-                <th className="border border-gray-400 px-4 py-2 text-left">
-                  Years of Experience
-                </th>
-                <th className="border border-gray-400 px-4 py-2 text-left">
-                  Phone Number
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {advocates.map((advocate) => (
-                <AdvocateRow key={advocate.id} advocate={advocate} />
-              ))}
-            </tbody>
-          </table>
-          {pagination.totalPages > 1 && (
-            <PaginationControls
-              pagination={pagination}
-              onPageChange={handlePageChange}
-            />
-          )}
-        </div>
+        <AdvocatesTable
+          data={advocates}
+          pagination={pagination}
+          onPageChange={handlePageChange}
+        />
       )}
     </main>
   );
