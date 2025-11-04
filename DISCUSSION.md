@@ -1,0 +1,21 @@
+# Discussion Notes
+
+## PostgreSQL 18+ Migration
+
+The Docker container kept restarting because PostgreSQL 18+ changed how it stores data. Instead of using `/var/lib/postgresql/data`, it now uses version-specific directories like `/var/lib/postgresql/18/data`.
+
+Fixed by:
+
+- Changed the volume mount in `docker-compose.yml` from `/var/lib/postgresql/data` to `/var/lib/postgresql`
+- Removed the old volume with `docker compose down -v`
+- Restarted the container
+
+## Architecture Decisions
+
+**Zod for DTOs**
+
+Added Zod schemas for runtime validation of API requests/responses. TypeScript types are inferred from Zod schemas, so we get both type safety and runtime validation.
+
+**React Query for data fetching**
+
+Using React Query (TanStack Query) instead of useEffect for data fetching. Handles caching, loading states, and error handling automatically.
