@@ -25,10 +25,16 @@ export const advocateResponseSchema = z.object({
 });
 
 /**
- * Zod schema for getting a list of advocates response
+ * Zod schema for getting a list of advocates response with pagination metadata
  */
 export const getAdvocatesResponseSchema = z.object({
   data: z.array(advocateResponseSchema),
+  pagination: z.object({
+    limit: z.number(),
+    offset: z.number(),
+    total: z.number(),
+    hasMore: z.boolean(),
+  }),
 });
 
 /**
@@ -63,6 +69,8 @@ export const createAdvocateSchema = z.object({
  * - `degree`: Filter by degree (exact match)
  * - `specialty`: Filter by specialty (contains in specialties array)
  * - `minYearsOfExperience`: Filter by minimum years of experience
+ * - `limit`: Maximum number of results to return (default: 10, max: 10)
+ * - `offset`: Number of results to skip (default: 0)
  */
 export const filterAdvocatesSchema = z.object({
   search: z.string().optional(),
@@ -70,6 +78,8 @@ export const filterAdvocatesSchema = z.object({
   degree: z.string().optional(),
   specialty: z.string().optional(),
   minYearsOfExperience: z.coerce.number().int().min(0).optional(),
+  limit: z.coerce.number().int().min(1).max(10).default(10),
+  offset: z.coerce.number().int().min(0).default(0),
 });
 
 /**

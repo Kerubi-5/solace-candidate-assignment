@@ -5,23 +5,67 @@
 
 import { db } from '@/db';
 import { advocates } from '../models/model';
-import { eq, and, or, ilike, gte, sql } from 'drizzle-orm';
+import { eq, and, or, ilike, gte, sql, count } from 'drizzle-orm';
 import type { AdvocateModel } from '../models/model';
 import { toAdvocateModel } from '../models/model';
 import type { FilterAdvocatesDto } from '../dto/dto';
+
+/**
+ * Result type for paginated queries
+ */
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+}
 
 /**
  * AdvocateRepository handles all database operations for advocates.
  */
 export class AdvocateRepository {
   /**
-   * Get all advocates from the database.
+   * Helper method to execute paginated query with count.
+   *
+   * @param whereClause - Optional WHERE clause for both data and count queries
+   * @param limit - Maximum number of results
+   * @param offset - Number of results to skip
+   * @returns Paginated result with data and total count
+   */
+  private async executePaginatedQuery(
+    whereClause: ReturnType<typeof and> | undefined, // WHERE clause for both data and count queries if provided
+    limit: number,
+    offset: number
+  ): Promise<PaginatedResult<AdvocateModel>> {
+    const [results, totalResult] = await Promise.all([
+      db
+        .select()
+        .from(advocates)
+        .where(whereClause)
+        .limit(limit)
+        .offset(offset),
+      db.select({ count: count() }).from(advocates).where(whereClause),
+    ]);
+
+    const total = totalResult[0]?.count ?? 0;
+
+    return {
+      data: results.map(toAdvocateModel),
+      total,
+    };
+  }
+
+  /**
+   * Get advocates from the database with pagination.
    * Optionally accepts filters for server-side filtering.
    *
-   * @param filters - Optional filter criteria for filtering advocates
-   * @returns Array of advocate models
+   * @param filters - Optional filter criteria and pagination parameters
+   * @returns Paginated result with data and total count
    */
-  async findAll(filters?: FilterAdvocatesDto): Promise<AdvocateModel[]> {
+  async findAll(
+    filters?: FilterAdvocatesDto
+  ): Promise<PaginatedResult<AdvocateModel>> {
+    const limit = filters?.limit ?? 10;
+    const offset = filters?.offset ?? 0;
+
     // Check if any filter fields are actually provided
     const hasFilters =
       filters &&
@@ -33,12 +77,11 @@ export class AdvocateRepository {
 
     // If filters are provided, use filtering logic
     if (hasFilters) {
-      return this.findByFilter(filters);
+      return this.findByFilter(filters, limit, offset);
     }
 
-    // Otherwise, return all advocates
-    const results = await db.select().from(advocates);
-    return results.map(toAdvocateModel);
+    // Otherwise, return all advocates with pagination
+    return this.executePaginatedQuery(undefined, limit, offset);
   }
 
   /**
@@ -59,8 +102,10 @@ export class AdvocateRepository {
    * Internal method used by findAll when filters are provided.
    */
   private async findByFilter(
-    filter: FilterAdvocatesDto
-  ): Promise<AdvocateModel[]> {
+    filter: FilterAdvocatesDto,
+    limit: number,
+    offset: number
+  ): Promise<PaginatedResult<AdvocateModel>> {
     // Build WHERE conditions dynamically based on filter
     const conditions = [];
 
@@ -108,15 +153,11 @@ export class AdvocateRepository {
       );
     }
 
-    // Build query with conditions
-    const queryBuilder = db.select().from(advocates);
+    // Build WHERE clause
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const results =
-      conditions.length > 0
-        ? await queryBuilder.where(and(...conditions))
-        : await queryBuilder;
-
-    return results.map(toAdvocateModel);
+    // Execute paginated query using helper method
+    return this.executePaginatedQuery(whereClause, limit, offset);
   }
 }
 

@@ -57,15 +57,29 @@ export async function GET(request: Request): Promise<Response> {
       throw parseResult.error;
     }
 
-    // Extract validated filter - if all fields are undefined, findAll returns all
+    // Extract validated filter with pagination
     const validatedFilter = parseResult.data;
+    const limit = validatedFilter.limit ?? 10;
+    const offset = validatedFilter.offset ?? 0;
 
-    // If all filter fields are undefined/empty, findAll returns all advocates
-    // Otherwise, applies the filters
-    const models = await advocateRepository.findAll(validatedFilter);
+    // Get paginated results from repository
+    const result = await advocateRepository.findAll(validatedFilter);
 
-    const dtos = models.map(toAdvocateResponseDto);
-    const response = { data: dtos };
+    // Convert models to DTOs
+    const dtos = result.data.map(toAdvocateResponseDto);
+
+    // Build pagination metadata
+    const hasMore = offset + result.data.length < result.total;
+
+    const response = {
+      data: dtos,
+      pagination: {
+        limit,
+        offset,
+        total: result.total,
+        hasMore,
+      },
+    };
 
     // Validate response with Zod schema
     const validatedResponse = getAdvocatesResponseSchema.parse(response);

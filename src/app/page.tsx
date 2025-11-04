@@ -2,6 +2,7 @@
 
 import { useAdvocateSearch } from '@/hooks/useAdvocateSearch';
 import { AdvocateRow } from '@/components/AdvocateRow';
+import { PaginationControls } from '@/components/PaginationControls';
 
 export default function Home() {
   const {
@@ -9,10 +10,12 @@ export default function Home() {
     searchQuery,
     hasActiveSearch,
     advocates,
+    pagination,
     isLoading,
     error,
     handleSearchChange,
     handleReset,
+    handlePageChange,
   } = useAdvocateSearch();
 
   return (
@@ -92,6 +95,12 @@ export default function Home() {
               ))}
             </tbody>
           </table>
+          {pagination.totalPages > 1 && (
+            <PaginationControls
+              pagination={pagination}
+              onPageChange={handlePageChange}
+            />
+          )}
         </div>
       )}
     </main>

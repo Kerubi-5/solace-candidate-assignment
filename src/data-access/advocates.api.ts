@@ -17,9 +17,9 @@ class AdvocatesApi {
   private readonly baseUrl = '/api/advocates';
 
   /**
-   * Build query string from filter parameters.
-   * @param filters - Optional filter parameters
-   * @returns Query string (e.g., "?city=New York&degree=MD")
+   * Build query string from filter parameters including pagination.
+   * @param filters - Optional filter parameters and pagination
+   * @returns Query string (e.g., "?city=New York&limit=10&offset=0")
    */
   private buildQueryString(filters?: FilterAdvocatesDto): string {
     if (!filters || Object.keys(filters).length === 0) {
@@ -37,18 +37,25 @@ class AdvocatesApi {
         filters.minYearsOfExperience.toString()
       );
     }
+    // Pagination parameters
+    if (filters.limit !== undefined) {
+      params.append('limit', filters.limit.toString());
+    }
+    if (filters.offset !== undefined) {
+      params.append('offset', filters.offset.toString());
+    }
 
     const queryString = params.toString();
     return queryString ? `?${queryString}` : '';
   }
 
   /**
-   * Fetch all advocates from the API.
-   * @param filters - Optional filter parameters for server-side filtering
-   * @returns Promise resolving to an array of advocates
+   * Fetch all advocates from the API with pagination.
+   * @param filters - Optional filter parameters and pagination
+   * @returns Promise resolving to advocates data and pagination metadata
    * @throws Error if the API request fails
    */
-  async getAll(filters?: FilterAdvocatesDto): Promise<Advocate[]> {
+  async getAll(filters?: FilterAdvocatesDto): Promise<GetAdvocatesResponseDto> {
     try {
       const queryString = this.buildQueryString(filters);
       const url = `${this.baseUrl}${queryString}`;
@@ -65,7 +72,7 @@ class AdvocatesApi {
       }
 
       const data: GetAdvocatesResponseDto = await response.json();
-      return data.data;
+      return data;
     } catch (error) {
       console.error('Error fetching advocates:', error);
       throw error instanceof Error
