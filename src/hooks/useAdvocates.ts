@@ -31,7 +31,10 @@ export const advocatesQueryKeys = {
 export function useAdvocates(filters?: FilterAdvocatesDto) {
   return useQuery<Advocate[], Error>({
     queryKey: advocatesQueryKeys.list(filters),
-    queryFn: () => advocatesApi.getAll(filters),
+    queryFn: async () => {
+      const response = await advocatesApi.getAll(filters);
+      return response.data;
+    },
     staleTime: 60 * 1000, // 1 minute
     gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
   });
