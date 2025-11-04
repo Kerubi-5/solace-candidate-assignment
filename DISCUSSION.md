@@ -19,3 +19,7 @@ Added Zod schemas for runtime validation of API requests/responses. TypeScript t
 **React Query for data fetching**
 
 Using React Query (TanStack Query) instead of useEffect for data fetching. Handles caching, loading states, and error handling automatically.
+
+**use-debounce for debounce functionality**
+
+Added `use-debounce` library to replace manual debounce implementation. Simplifies the code by removing the dual state pattern (searchTerm and debouncedSearchTerm) and provides a single source of truth with `useDebouncedValue` hook. This reduces complexity and potential bugs from manual timer management.

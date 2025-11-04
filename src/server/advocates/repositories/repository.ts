@@ -5,7 +5,7 @@
 
 import { db } from '@/db';
 import { advocates } from '../models/model';
-import { eq, and, ilike, gte, sql } from 'drizzle-orm';
+import { eq, and, or, ilike, gte, sql } from 'drizzle-orm';
 import type { AdvocateModel } from '../models/model';
 import { toAdvocateModel } from '../models/model';
 import type { FilterAdvocatesDto } from '../dto/dto';
@@ -25,7 +25,8 @@ export class AdvocateRepository {
     // Check if any filter fields are actually provided
     const hasFilters =
       filters &&
-      (filters.city !== undefined ||
+      (filters.search !== undefined ||
+        filters.city !== undefined ||
         filters.degree !== undefined ||
         filters.specialty !== undefined ||
         filters.minYearsOfExperience !== undefined);
@@ -63,11 +64,34 @@ export class AdvocateRepository {
     // Build WHERE conditions dynamically based on filter
     const conditions = [];
 
-    if (filter.city) {
+    // General search: searches across firstName, lastName, city, degree, and specialties
+    // All searches are case-insensitive
+    if (filter.search) {
+      const searchPattern = `%${filter.search}%`;
+
+      // Search in text fields (case-insensitive with ILIKE)
+      const textSearch = or(
+        ilike(advocates.firstName, searchPattern),
+        ilike(advocates.lastName, searchPattern),
+        ilike(advocates.city, searchPattern),
+        ilike(advocates.degree, searchPattern)
+      );
+
+      // Search in specialties: convert JSONB to text and search (case-insensitive)
+      const specialtiesSearch = sql`LOWER(${advocates.specialties}::text) LIKE LOWER(${searchPattern})`;
+
+      const searchConditions = or(textSearch, specialtiesSearch);
+      if (searchConditions) {
+        conditions.push(searchConditions);
+      }
+    }
+
+    // Specific filters (only applied if general search is not used)
+    if (filter.city && !filter.search) {
       conditions.push(ilike(advocates.city, `%${filter.city}%`));
     }
 
-    if (filter.degree) {
+    if (filter.degree && !filter.search) {
       conditions.push(eq(advocates.degree, filter.degree));
     }
 

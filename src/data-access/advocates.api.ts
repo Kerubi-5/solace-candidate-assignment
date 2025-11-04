@@ -27,6 +27,7 @@ class AdvocatesApi {
     }
 
     const params = new URLSearchParams();
+    if (filters.search) params.append('search', filters.search);
     if (filters.city) params.append('city', filters.city);
     if (filters.degree) params.append('degree', filters.degree);
     if (filters.specialty) params.append('specialty', filters.specialty);

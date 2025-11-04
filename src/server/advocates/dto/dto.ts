@@ -58,8 +58,14 @@ export const createAdvocateSchema = z.object({
  * Zod schema for filtering advocates from query parameters.
  * Handles query parameter parsing and validation.
  * All fields are optional - if none provided, returns all advocates.
+ * - `search`: General search term that searches across firstName, lastName, city, and degree
+ * - `city`: Filter by city (exact match)
+ * - `degree`: Filter by degree (exact match)
+ * - `specialty`: Filter by specialty (contains in specialties array)
+ * - `minYearsOfExperience`: Filter by minimum years of experience
  */
 export const filterAdvocatesSchema = z.object({
+  search: z.string().optional(),
   city: z.string().optional(),
   degree: z.string().optional(),
   specialty: z.string().optional(),
