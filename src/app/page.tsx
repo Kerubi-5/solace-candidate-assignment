@@ -113,7 +113,10 @@ export default function Home() {
           <tbody>
             {filteredAdvocates.map((advocate) => (
               <tr
-                key={`${advocate.firstName}-${advocate.lastName}-${advocate.phoneNumber}`}
+                key={
+                  advocate.id ??
+                  `${advocate.firstName}-${advocate.lastName}-${advocate.phoneNumber}`
+                }
               >
                 <td className="border border-gray-400 px-4 py-2">
                   {advocate.firstName}
