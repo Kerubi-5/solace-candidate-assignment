@@ -8,6 +8,7 @@ import { advocateRepository } from '@/server/advocates/repositories/repository';
 import {
   getAdvocatesResponseSchema,
   advocateResponseSchema,
+  filterAdvocatesSchema,
 } from '@/server/advocates/dto/dto';
 import { handleApiError } from '@/server/lib/error-handler';
 import type { AdvocateModel } from '@/server/advocates/models/model';
@@ -36,12 +37,33 @@ function toAdvocateResponseDto(model: AdvocateModel) {
 /**
  * GET /api/advocates
  * Returns a list of advocates from the repository.
+ * Supports optional query parameters for filtering: city, degree, specialty, minYearsOfExperience
  * Uses the repository pattern and converts models to DTOs.
  * Validates response with Zod schema.
  */
-export async function GET(): Promise<Response> {
+export async function GET(request: Request): Promise<Response> {
   try {
-    const models = await advocateRepository.findAll();
+    // Parse query parameters from URL
+    const { searchParams } = new URL(request.url);
+    const queryParams = Object.fromEntries(searchParams.entries());
+
+    // Parse and validate query parameters with Zod
+    // If no params provided, returns empty object (all fields undefined)
+    // Zod will handle type coercion (e.g., string to number)
+    const parseResult = filterAdvocatesSchema.safeParse(queryParams);
+
+    if (!parseResult.success) {
+      // Validation errors are handled by handleApiError
+      throw parseResult.error;
+    }
+
+    // Extract validated filter - if all fields are undefined, findAll returns all
+    const validatedFilter = parseResult.data;
+
+    // If all filter fields are undefined/empty, findAll returns all advocates
+    // Otherwise, applies the filters
+    const models = await advocateRepository.findAll(validatedFilter);
+
     const dtos = models.map(toAdvocateResponseDto);
     const response = { data: dtos };
 

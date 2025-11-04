@@ -32,6 +32,13 @@ export const getAdvocatesResponseSchema = z.object({
 });
 
 /**
+ * Zod schema for getting a single advocate response
+ */
+export const getAdvocateResponseSchema = z.object({
+  data: advocateResponseSchema,
+});
+
+/**
  * Zod schema for creating/updating an advocate (for future use)
  */
 export const createAdvocateSchema = z.object({
@@ -48,13 +55,15 @@ export const createAdvocateSchema = z.object({
 });
 
 /**
- * Zod schema for filtering advocates (for future use)
+ * Zod schema for filtering advocates from query parameters.
+ * Handles query parameter parsing and validation.
+ * All fields are optional - if none provided, returns all advocates.
  */
 export const filterAdvocatesSchema = z.object({
   city: z.string().optional(),
   degree: z.string().optional(),
   specialty: z.string().optional(),
-  minYearsOfExperience: z.number().int().min(0).optional(),
+  minYearsOfExperience: z.coerce.number().int().min(0).optional(),
 });
 
 /**

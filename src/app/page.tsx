@@ -1,32 +1,35 @@
 'use client';
 
-import { useState, useMemo, ChangeEvent } from 'react';
+import { useState, useEffect, useMemo, ChangeEvent } from 'react';
 import { useAdvocates } from '@/hooks/useAdvocates';
+import type { FilterAdvocatesDto } from '@/server/advocates/dto/dto';
 
 export default function Home() {
-  const { data: advocates = [], isLoading, error } = useAdvocates();
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
 
-  const filteredAdvocates = useMemo(() => {
-    if (!searchTerm) {
-      return advocates;
+  // Debounce search term to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms debounce delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Build filter object from search term
+  // For now, we'll use search term as city filter (can be enhanced later)
+  const filters: FilterAdvocatesDto | undefined = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) {
+      return undefined;
     }
 
-    const term = searchTerm.toLowerCase();
-    return advocates.filter((advocate) => {
-      return (
-        advocate.firstName.toLowerCase().includes(term) ||
-        advocate.lastName.toLowerCase().includes(term) ||
-        advocate.city.toLowerCase().includes(term) ||
-        advocate.degree.toLowerCase().includes(term) ||
-        advocate.specialties.some((specialty) =>
-          specialty.toLowerCase().includes(term)
-        ) ||
-        advocate.yearsOfExperience.toString().includes(term) ||
-        advocate.phoneNumber.toString().includes(term)
-      );
-    });
-  }, [advocates, searchTerm]);
+    return {
+      city: debouncedSearchTerm.trim(),
+    };
+  }, [debouncedSearchTerm]);
+
+  const { data: advocates = [], isLoading, error } = useAdvocates(filters);
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -83,10 +86,10 @@ export default function Home() {
           </button>
         </div>
       </div>
-      {filteredAdvocates.length === 0 ? (
+      {advocates.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-600">
-            {searchTerm
+            {debouncedSearchTerm
               ? 'No advocates found matching your search.'
               : 'No advocates available.'}
           </p>
@@ -120,7 +123,7 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              {filteredAdvocates.map((advocate) => (
+              {advocates.map((advocate) => (
                 <tr key={advocate.id}>
                   <td className="border border-gray-400 px-4 py-2">
                     {advocate.firstName}
